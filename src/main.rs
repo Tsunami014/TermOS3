@@ -18,9 +18,9 @@ pub extern "C" fn _start() -> ! {
     main()
 }
 
+mod boot;
 fn main() -> ! {
-    kudos::printlgln!("Hello world!");
-
+    boot::on_boot();
     kudos::hlt_loop();
 }
 
