@@ -1,23 +1,29 @@
-# Template
-A template for other apps to use KudOS
+# TermOS
+A terminal operating system for Kudos.
 
-## Updating
-If KudOS changes and you want to update your version you're using:
+It's the third because I've started making 2 other terminal operating systems in different languages but they're all very incomplete.
+
+## I just want to see it
 ```bash
-cargo update
+cargo run --features bootloader
 ```
 
 ## Doing stuff with the code
 `--features bootloader` will make the executable use the bootloader init. Useful when running without the KudOS main kernel, but for using with the kernel do not use it.
-### Building
+### Building (for use in kudos)
 ```bash
 cargo build --release
 ```
-### Running
+### Running by itself
 ```bash
 cargo run --features bootloader
 ```
-### Testing
+### Testing (also by itself)
 ```bash
 cargo test --features bootloader
+```
+## Updating
+If KudOS changes and you want to update your version you're using:
+```bash
+cargo update
 ```
