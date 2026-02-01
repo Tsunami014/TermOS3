@@ -1,0 +1,19 @@
+[package]
+name = "Template"
+version = "0.0.0"
+edition = "2024"
+authors = ["Tsunami014 <tsunami014@duck.com>", "chishxd", "PixelSaver"]
+
+[features]
+bootloader = []
+
+[dependencies]
+kudos = { git = "https://github.com/kudos-team/kernel.git", branch = "main" }
+bootloader = { version = "0.9", features = ["map_physical_memory"]}
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
