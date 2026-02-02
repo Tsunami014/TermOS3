@@ -7,7 +7,11 @@ name = "Template"
 version = "0.0.0"
 dependencies = [
  "bootloader",
+ "futures-util",
  "kudos",
+ "lazy_static",
+ "pc-keyboard",
+ "spin 0.5.2",
  "x86_64",
 ]
 

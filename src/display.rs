@@ -1,12 +1,11 @@
+use crate::window::buffer::Buffer;
 use kudos::vga_buffer::{
-    ColorCode, Color,
     WRITER,
-    DEFAULT_FG, DEFAULT_BG,
     BUFFER_WIDTH, BUFFER_HEIGHT
 };
 use x86_64::instructions::interrupts;
 
-pub fn display() {
+pub fn display(buf: spin::MutexGuard<'_, Buffer>) {
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();
         const HORIZ_PIPE: u8 = 0xC4;
@@ -35,9 +34,9 @@ pub fn display() {
 
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();
-        for row in 1..BUFFER_HEIGHT-1 {
-            for col in 1..BUFFER_WIDTH-1 {
-                writer.set_char_at(row, col, b'#');
+        for row in 0..BUFFER_HEIGHT-2 {
+            for col in 0..BUFFER_WIDTH-2 {
+                writer.set_char_at(row+1, col+1, buf.get(col, row));
             }
         }
     });
