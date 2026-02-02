@@ -10,6 +10,7 @@ bootloader = []
 [dependencies]
 kudos = { git = "https://github.com/kudos-team/kernel.git", branch = "main" }
 bootloader = { version = "0.9", features = ["map_physical_memory"]}
+x86_64 = "0.14.2"
 
 [profile.dev]
 panic = "abort"

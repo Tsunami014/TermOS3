@@ -1,9 +1,9 @@
 use kudos::utils::fancy;
 use kudos::utils::keys::choice;
 use kudos::task::{Task, executor::Executor, keyboard::ScancodeStream};
-use kudos::{print, println, printlgln, LogType};
+use crate::display::display;
 
-async fn main() {
+/*async fn main() {
     let mut scancodes = ScancodeStream::new();
     loop {
         let chararr = ['y', 'n'];
@@ -15,14 +15,12 @@ async fn main() {
             print!("No.");
         }
     }
-}
+}*/
 
 /// This function will run when running the main program
 pub fn on_boot() {
-    printlgln!("Hello world!");
-    println!("Press y/n");
-
-    let mut executor = Executor::new();
+    display();
+    /*let mut executor = Executor::new();
     executor.spawn(Task::new(main()));
-    executor.run();
+    executor.run();*/
 }

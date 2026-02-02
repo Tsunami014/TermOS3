@@ -19,6 +19,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 mod boot;
+mod display;
 fn main() -> ! {
     boot::on_boot();
     kudos::hlt_loop();
