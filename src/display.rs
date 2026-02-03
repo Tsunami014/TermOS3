@@ -1,11 +1,14 @@
-use crate::window::buffer::Buffer;
+use crate::winapi::buffer::Buffer;
 use kudos::vga_buffer::{
     WRITER,
     BUFFER_WIDTH, BUFFER_HEIGHT
 };
 use x86_64::instructions::interrupts;
+extern crate alloc;
+use alloc::sync::Arc;
+use spin::Mutex;
 
-pub fn display(buf: spin::MutexGuard<'_, Buffer>) {
+pub fn display(buf: &Arc<Mutex<Buffer>>) {
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();
         const HORIZ_PIPE: u8 = 0xC4;
@@ -34,9 +37,10 @@ pub fn display(buf: spin::MutexGuard<'_, Buffer>) {
 
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();
+        let mbuf = buf.lock();
         for row in 0..BUFFER_HEIGHT-2 {
             for col in 0..BUFFER_WIDTH-2 {
-                writer.set_char_at(row+1, col+1, buf.get(col, row));
+                writer.set_char_at(row+1, col+1, mbuf.get(col, row));
             }
         }
     });

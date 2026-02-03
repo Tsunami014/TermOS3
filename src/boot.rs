@@ -3,30 +3,29 @@ use futures_util::stream::StreamExt;
 use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
 
 use crate::display::display;
-use crate::{print_at, println_at, window::buffer::{Buffer, Writer}};
+use crate::winapi::window::WindowLogic;
+use crate::windows;
 
 extern crate alloc;
 use alloc::sync::Arc;
 use spin::Mutex;
-
 use lazy_static::lazy_static;
 lazy_static! {
-    pub static ref MainWind: Arc<Mutex<Buffer>> =
-        Arc::new(Mutex::new(Buffer::new(0)));
+    pub static ref MainWind: Arc<Mutex<dyn WindowLogic>> =
+        Arc::new(Mutex::new(windows::test::MainW::new()));
 }
 
 async fn main() {
     let mut scancodes = ScancodeStream::new();
     let mut keyboard = Keyboard::new(ScancodeSet1::new(),
         layouts::Us104Key, HandleControl::Ignore);
-    let mut writr: Writer = Writer::new(MainWind.clone());
 
-    display(MainWind.lock());
+    display(MainWind.lock().buffer());
     while let Some(scancode) = scancodes.next().await {
         if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
             if let Some(DecodedKey::Unicode(c)) = keyboard.process_keyevent(key_event) {
-                print_at!(&mut writr, "{}", c);
-                display(MainWind.lock());
+                MainWind.lock().on_key(c);
+                display(MainWind.lock().buffer());
             }
         }
     }

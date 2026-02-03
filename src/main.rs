@@ -20,7 +20,8 @@ pub extern "C" fn _start() -> ! {
 
 mod boot;
 mod display;
-mod window;
+mod winapi;
+mod windows;
 fn main() -> ! {
     boot::on_boot();
     kudos::hlt_loop();
