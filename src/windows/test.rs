@@ -1,26 +1,44 @@
-use crate::print_at;
-use crate::winapi::window::{WindowCtx, WindowLogic};
-
+use crate::winapi::window::{Window, WindowCore};
 use crate::winapi::buffer::Buffer;
+use crate::winapi::components;
+
 extern crate alloc;
-use spin::Mutex;
+use alloc::{vec, vec::Vec};
+use alloc::boxed::Box;
 use alloc::sync::Arc;
+use spin::Mutex;
 
 pub struct MainW {
-    ctx: WindowCtx,
+    core: WindowCore,
+    elms: Vec<Box<dyn components::Element + Send + Sync>>
 }
 impl MainW {
     pub fn new() -> Self {
-        Self {
-            ctx: WindowCtx::new(),
-        }
+        let mut this = Self {
+            core: WindowCore::new(),
+            elms: vec![
+                Box::new(components::Label::new_str("Testing!"))
+            ]
+        };
+        this.redraw();
+        this
     }
 }
-impl WindowLogic for MainW {
+impl Window for MainW {
+    fn buffer(&mut self) -> &Arc<Mutex<Buffer>> { self.core.buffer() }
+    fn unload(&mut self) { self.core.unload(); }
+
     fn on_key(&mut self, c: char) {
-        print_at!(self.ctx.writer().lock(), "{}", c);
+        self.core.writer().lock().clear(0);
+        for e in &mut self.elms {
+            e.on_key(c);
+        }
+        self.redraw();
     }
-    fn buffer(&mut self) -> &Arc<Mutex<Buffer>> {
-        self.ctx.buffer()
+    fn redraw(&mut self) {
+        let mut writr = self.core.writer().lock();
+        for e in &self.elms {
+            e.redraw(&mut writr);
+        }
     }
 }

@@ -3,7 +3,7 @@ use futures_util::stream::StreamExt;
 use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
 
 use crate::display::display;
-use crate::winapi::window::WindowLogic;
+use crate::winapi::window::Window;
 use crate::windows;
 
 extern crate alloc;
@@ -11,7 +11,7 @@ use alloc::sync::Arc;
 use spin::Mutex;
 use lazy_static::lazy_static;
 lazy_static! {
-    pub static ref MainWind: Arc<Mutex<dyn WindowLogic>> =
+    pub static ref MainWind: Arc<Mutex<dyn Window>> =
         Arc::new(Mutex::new(windows::test::MainW::new()));
 }
 

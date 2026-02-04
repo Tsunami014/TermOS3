@@ -86,6 +86,12 @@ impl Writer {
         self.column_position = self.wrap_from;
         self.row_position += 1;
     }
+
+    pub fn clear(&mut self, fill: u8) {
+        self.locked_buf().clear(fill);
+        self.column_position = 0;
+        self.row_position = 0;
+    }
 }
 
 // So the print macros can use write_fmt
@@ -102,17 +108,17 @@ impl fmt::Write for Writer {
 // Some macros for ease of use
 #[macro_export]
 macro_rules! print_at {
-    ($writr:expr, $($arg:tt)*) => ($crate::winapi::buffer::_print($writr, format_args!($($arg)*)));
+    ($writr:expr, $($arg:tt)*) => ($crate::winapi::buffer::_print_at($writr, format_args!($($arg)*)));
 }
 
 #[macro_export]
 macro_rules! println_at {
     ($writr:expr) => ($crate::print_at!($writr, "\n"));
-    ($writr:expr, $($arg:tt)*) => ($crate::winapi::buffer::print!($writr, "{}\n", format_args!($($arg)*)));
+    ($writr:expr, $($arg:tt)*) => ($crate::print_at!($writr, "{}\n", format_args!($($arg)*)));
 }
 
 #[doc(hidden)]
-pub fn _print(mut writr: spin::MutexGuard<'_, Writer>, args: fmt::Arguments) {
+pub fn _print_at(writr: &mut spin::MutexGuard<'_, Writer>, args: fmt::Arguments) {
     use x86_64::instructions::interrupts;
     interrupts::without_interrupts(|| {
         writr.write_fmt(args).unwrap();

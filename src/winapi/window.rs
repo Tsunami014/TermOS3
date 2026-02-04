@@ -5,11 +5,21 @@ use core::option::Option;
 use spin::Mutex;
 use alloc::sync::Arc;
 
-pub struct WindowCtx {
+#[allow(dead_code)]
+pub trait Window: Send + Sync {
+    fn buffer(&mut self) -> &Arc<Mutex<Buffer>>;
+    fn unload(&mut self);
+
+    fn on_key(&mut self, _c: char) {}
+    fn redraw(&mut self) {}
+}
+
+pub struct WindowCore {
     pub buf: Option<Arc<Mutex<Buffer>>>,
     pub writr: Option<Mutex<Writer>>,
 }
-impl WindowCtx {
+#[allow(dead_code)]
+impl WindowCore {
     pub fn new() -> Self {
         let mut this = Self {
             buf: None,
@@ -39,9 +49,6 @@ impl WindowCtx {
         }
         self.writr.as_ref().unwrap()
     }
-}
 
-pub trait WindowLogic: Send + Sync {
-    fn buffer(&mut self) -> &Arc<Mutex<Buffer>>;
-    fn on_key(&mut self, _c: char) {}
+    pub fn on_key(&mut self, _c: char) {}
 }
