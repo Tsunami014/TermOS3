@@ -3,6 +3,7 @@ use crate::println_at;
 
 extern crate alloc;
 use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 #[allow(dead_code)]
 pub trait Element {
@@ -11,7 +12,6 @@ pub trait Element {
     fn tick(&mut self, _focus: bool) {}
     fn redraw(&self, _focus: bool, _writr: &mut spin::MutexGuard<'_, Writer>) {}
 }
-//print_at!(self.core.writer().lock(), "{}", c);
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
@@ -20,11 +20,11 @@ pub enum Alignment {
     Middle = 1,
     Right = 2,
 }
-fn spacing(align: Alignment, len: usize) -> usize {
+fn spacing(align: Alignment, len: usize, width: usize) -> usize {
     match align {
         Alignment::Left => 0,
-        Alignment::Middle => (WINDOW_WIDTH - len) / 2,
-        Alignment::Right => WINDOW_WIDTH - len,
+        Alignment::Middle => (width - len) / 2,
+        Alignment::Right => width - len,
     }
 }
 
@@ -51,7 +51,7 @@ impl Element for Label {
             let end = (i + WINDOW_WIDTH).min(bytes.len());
             let part = &self.text[i..end];
 
-            let spaces = spacing(self.align, end - i);
+            let spaces = spacing(self.align, end - i, WINDOW_WIDTH);
             println_at!(w, "{}{}", " ".repeat(spaces), part)
         }
     }
@@ -73,13 +73,36 @@ impl Input {
             cursor: 0
         }
     }
+    fn wrap_lines(text: &str) -> Vec<String> {
+        let mut out = Vec::new();
+
+        for line in text.split('\n') {
+            if line.is_empty() {
+                out.push(String::new());
+                continue;
+            }
+
+            let mut i = 0;
+            while i < line.len() {
+                let end = (i + (WINDOW_WIDTH-2)).min(line.len());
+                out.push(line[i..end].to_string());
+                i = end;
+            }
+        }
+        out
+    }
 }
 impl Element for Input {
     fn tick(&mut self, _focus: bool) {
         self.cursor = (self.cursor + 1) % 10;
     }
     fn on_key(&mut self, _focus: bool, c: char) {
-        self.text += &c.to_string()
+        if c == 8 as char {
+            self.text.pop();
+        } else {
+            //self.text += &((c as u8).to_string() + " "); // For finding char codes
+            self.text += &c.to_string()
+        }
     }
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
         let txt = if self.cursor >= 5 {
@@ -87,42 +110,38 @@ impl Element for Input {
         } else {
             self.text.clone() + " "
         };
-        let mxwid = if self.boxed { WINDOW_WIDTH-2 } else { WINDOW_WIDTH };
-        let len = txt.len();
-        let reallen = if len > mxwid { WINDOW_WIDTH } else { len };
-        let gspaces = if len > mxwid { 0 } else { spacing(self.align, len+2) };
+        let lines = Input::wrap_lines(&txt);
+        let boxwid = lines.iter().map(|l| l.len()).max().unwrap_or(0); 
+        let boxspaces = spacing(self.align, boxwid + 2, WINDOW_WIDTH);
         if self.boxed {
-            w.write_string(&" ".repeat(gspaces));
+            w.write_string(&" ".repeat(boxspaces));
             w.write_byte(0xDA);
-            for _col in 0..reallen {
+            for _col in 0..boxwid {
                 w.write_byte(0xC4);
             }
             w.write_byte(0xBF);
             w.write_byte(b'\n');
         }
-        for i in (0..len).step_by(mxwid) {
-            let end = (i + mxwid).min(len);
-            let part = &txt[i..end]; 
-            
+        for line in &lines {
             if self.boxed {
-                let plen = end - i;
-                if plen < mxwid {
-                    let spaces = spacing(self.align, plen+2);
-                    w.write_string(&" ".repeat(spaces));
-                }
+                let lineln = line.len();
+                let left_box_align = spacing(self.align, lineln, boxwid);
+                w.write_string(&" ".repeat(boxspaces));
                 w.write_byte(0xB3);
-                w.write_string(part);
+                w.write_string(&" ".repeat(left_box_align));
+                w.write_string(line);
+                w.write_string(&" ".repeat(boxwid - lineln - left_box_align));
                 w.write_byte(0xB3);
                 w.write_byte(b'\n');
             } else {
-                let spaces = spacing(self.align, end - i);
-                println_at!(w, "{}{}", " ".repeat(spaces), part);
+                let spaces = spacing(self.align, line.len(), WINDOW_WIDTH);
+                println_at!(w, "{}{}", " ".repeat(spaces), line);
             }
         }
         if self.boxed {
-            w.write_string(&" ".repeat(gspaces));
+            w.write_string(&" ".repeat(boxspaces));
             w.write_byte(0xC0);
-            for _col in 0..reallen {
+            for _col in 0..boxwid {
                 w.write_byte(0xC4);
             }
             w.write_byte(0xD9);
