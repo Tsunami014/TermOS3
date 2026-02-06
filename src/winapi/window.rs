@@ -11,6 +11,7 @@ pub trait Window: Send + Sync {
     fn unload(&mut self);
 
     fn on_key(&mut self, _c: char) {}
+    fn tick(&mut self) {}
     fn redraw(&mut self) {}
 }
 

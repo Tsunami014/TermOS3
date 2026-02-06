@@ -17,7 +17,8 @@ impl MainW {
         let mut this = Self {
             core: WindowCore::new(),
             elms: vec![
-                Box::new(components::Label::new_str("Testing!"))
+                Box::new(components::Label::new_str("Testing!")),
+                Box::new(components::Input::new()),
             ]
         };
         this.redraw();
@@ -29,16 +30,22 @@ impl Window for MainW {
     fn unload(&mut self) { self.core.unload(); }
 
     fn on_key(&mut self, c: char) {
-        self.core.writer().lock().clear(0);
         for e in &mut self.elms {
-            e.on_key(c);
+            e.on_key(false, c);
+        }
+        self.redraw();
+    }
+    fn tick(&mut self) {
+        for e in &mut self.elms {
+            e.tick(false);
         }
         self.redraw();
     }
     fn redraw(&mut self) {
         let mut writr = self.core.writer().lock();
+        writr.clear(0);
         for e in &self.elms {
-            e.redraw(&mut writr);
+            e.redraw(false, &mut writr);
         }
     }
 }
