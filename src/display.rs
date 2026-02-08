@@ -40,6 +40,7 @@ pub fn display(buf: &Arc<Mutex<Buffer>>) {
         let mbuf = buf.lock();
         for row in 0..BUFFER_HEIGHT-2 {
             for col in 0..BUFFER_WIDTH-2 {
+                writer.color_code = mbuf.get_col(col, row);
                 writer.set_char_at(row+1, col+1, mbuf.get(col, row));
             }
         }

@@ -96,7 +96,7 @@ dependencies = [
 [[package]]
 name = "kudos"
 version = "0.0.0"
-source = "git+https://github.com/kudos-team/kernel.git?branch=main#a5e5b91bb1e1e4beca6a5a72881e19c440cef719"
+source = "git+https://github.com/kudos-team/kernel.git?branch=main#e7dc63dc4c0f51790095365c9227f8f6e96e2cd2"
 dependencies = [
  "bootloader",
  "conquer-once",

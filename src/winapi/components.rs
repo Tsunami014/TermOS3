@@ -1,4 +1,7 @@
-use crate::winapi::buffer::{Writer, WINDOW_WIDTH};
+use crate::winapi::buffer::{
+    Writer, WINDOW_WIDTH,
+    ColorCode, Color, DEFAULT_BG,
+};
 use crate::println_at;
 
 extern crate alloc;
@@ -45,7 +48,10 @@ impl Label {
     }
 }
 impl Element for Label {
-    fn redraw(&self, _focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
+    fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
+        if focus {
+            w.set_colour(ColorCode::new(Color::Yellow, DEFAULT_BG));
+        }
         let bytes = self.text.as_bytes();
         for i in (0..bytes.len()).step_by(WINDOW_WIDTH) {
             let end = (i + WINDOW_WIDTH).min(bytes.len());
@@ -96,20 +102,26 @@ impl Element for Input {
     fn tick(&mut self, _focus: bool) {
         self.cursor = (self.cursor + 1) % 10;
     }
-    fn on_key(&mut self, _focus: bool, c: char) {
+    fn on_key(&mut self, focus: bool, c: char) {
+        if !focus { return; };
+        //self.text += &((c as u8).to_string() + " "); // For finding char codes
         if c == 8 as char {
             self.text.pop();
         } else {
-            //self.text += &((c as u8).to_string() + " "); // For finding char codes
             self.text += &c.to_string()
         }
     }
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
-        let txt = if self.cursor >= 5 {
-            self.text.clone() + "_"
-        } else {
-            self.text.clone() + " "
-        };
+        if focus {
+            w.set_colour(ColorCode::new(Color::Yellow, DEFAULT_BG));
+        }
+        let txt = if focus {
+            if self.cursor >= 5 {
+                self.text.clone() + "_"
+            } else {
+                self.text.clone() + " "
+            }
+        } else { self.text.clone() };
         let lines = Input::wrap_lines(&txt);
         let boxwid = lines.iter().map(|l| l.len()).max().unwrap_or(0); 
         let boxspaces = spacing(self.align, boxwid + 2, WINDOW_WIDTH);

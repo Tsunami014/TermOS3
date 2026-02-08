@@ -30,7 +30,7 @@ impl WindowCore {
         this
     }
     fn load(&mut self) {
-        let buf = Arc::new(Mutex::new(Buffer::new(0)));
+        let buf = Arc::new(Mutex::new(Buffer::new()));
         self.buf = Some(buf.clone());
         self.writr = Some(Mutex::new(Writer::new(buf.clone())));
     }
@@ -50,6 +50,4 @@ impl WindowCore {
         }
         self.writr.as_ref().unwrap()
     }
-
-    pub fn on_key(&mut self, _c: char) {}
 }

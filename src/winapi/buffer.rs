@@ -1,32 +1,51 @@
-use kudos::vga_buffer::{BUFFER_WIDTH, BUFFER_HEIGHT};
+use kudos::vga_buffer::{
+    BUFFER_WIDTH, BUFFER_HEIGHT,
+};
+pub use kudos::vga_buffer::{
+    Color, ColorCode, DEFAULT_FG, DEFAULT_BG,
+};
 
 pub const WINDOW_WIDTH: usize = BUFFER_WIDTH - 2;
 pub const WINDOW_HEIGHT: usize = BUFFER_HEIGHT - 2;
 
-#[repr(transparent)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ScreenChar {
+    ascii_char: u8,
+    color_code: ColorCode,
+}
+
 pub struct Buffer {
-    chars: [[u8; WINDOW_WIDTH]; WINDOW_HEIGHT],
+    chars: [[ScreenChar; WINDOW_WIDTH]; WINDOW_HEIGHT],
+    pub colour: ColorCode,
 }
 impl Buffer {
-    pub fn new(fill: u8) -> Self {
+    pub fn new() -> Self {
         Self {
-            chars: [[fill; WINDOW_WIDTH]; WINDOW_HEIGHT],
+            chars: [[ScreenChar{ ascii_char: 0, color_code: ColorCode::default() }; WINDOW_WIDTH]; WINDOW_HEIGHT],
+            colour: ColorCode::default(),
         }
     }
 
     #[inline]
     pub fn get(&self, x: usize, y: usize) -> u8 {
-        self.chars[y][x]
+        self.chars[y][x].ascii_char
+    }
+    #[inline]
+    pub fn get_col(&self, x: usize, y: usize) -> ColorCode {
+        self.chars[y][x].color_code
     }
     #[inline]
     pub fn set(&mut self, x: usize, y: usize, ch: u8) {
-        self.chars[y][x] = ch;
+        self.chars[y][x] = ScreenChar{ ascii_char: ch, color_code: self.colour };
     }
 
-    pub fn clear(&mut self, fill: u8) {
+    pub fn clear(&mut self) {
         for row in &mut self.chars {
-            row.fill(fill);
+            row.fill(ScreenChar{ ascii_char: 0, color_code: ColorCode::default() });
         }
+    }
+    pub fn clear_col(&mut self) {
+        self.colour = ColorCode::default();
     }
 }
 
@@ -40,6 +59,7 @@ pub struct Writer {
     pub wrap_at: usize,
     buffer: Arc<Mutex<Buffer>>,
 }
+#[allow(dead_code)]
 impl Writer {
     pub fn new(buf: Arc<Mutex<Buffer>>) -> Self {
         Self {
@@ -81,16 +101,26 @@ impl Writer {
         }
     }
 
+    pub fn colour(&self) -> ColorCode {
+        self.locked_buf().colour
+    }
+    pub fn set_colour(&mut self, new_col: ColorCode) {
+        self.locked_buf().colour = new_col;
+    }
+
     #[inline]
     fn new_line(&mut self) {
         self.column_position = self.wrap_from;
         self.row_position += 1;
     }
 
-    pub fn clear(&mut self, fill: u8) {
-        self.locked_buf().clear(fill);
+    pub fn clear(&mut self) {
+        self.locked_buf().clear();
         self.column_position = 0;
         self.row_position = 0;
+    }
+    pub fn clear_col(&mut self) {
+        self.locked_buf().clear_col();
     }
 }
 
