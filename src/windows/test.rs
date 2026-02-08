@@ -1,6 +1,9 @@
-use crate::winapi::window::{Window, WindowCore};
-use crate::winapi::buffer::Buffer;
-use crate::winapi::components;
+use crate::winapi::{
+    window::{Window, WindowCore},
+    buffer::Buffer,
+    kbd::KeyMods,
+    components,
+};
 
 extern crate alloc;
 use alloc::{vec, vec::Vec};
@@ -33,12 +36,17 @@ impl Window for MainW {
     fn buffer(&mut self) -> &Arc<Mutex<Buffer>> { self.core.buffer() }
     fn unload(&mut self) { self.core.unload(); }
 
-    fn on_key(&mut self, c: char) {
+    fn on_key(&mut self, c: char, mods: KeyMods) {
         if c == 9 as char {
-            self.active = (self.active + 1) % self.elms.len();
+            if mods.shift {
+                self.active -= 1;
+            } else {
+                self.active += 1;
+            }
+            self.active = self.active % self.elms.len();
         } else {
             for (idx, elm) in self.elms.iter_mut().enumerate() {
-                elm.on_key(idx == self.active, c);
+                elm.on_key(idx == self.active, c, mods);
             }
         }
         self.redraw();

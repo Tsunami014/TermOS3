@@ -4,7 +4,10 @@ use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
 use x86_64::instructions::interrupts;
 
 use crate::display::display;
-use crate::winapi::window::Window;
+use crate::winapi::{
+    window::Window,
+    kbd::KeyMods,
+};
 use crate::windows;
 
 extern crate alloc;
@@ -35,9 +38,10 @@ async fn main() {
     });
     while let Some(scancode) = scancodes.next().await {
         if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
+            let mods = KeyMods::from(keyboard.get_modifiers());
             if let Some(DecodedKey::Unicode(c)) = keyboard.process_keyevent(key_event) {
                 interrupts::without_interrupts(|| {
-                    MainWind.lock().on_key(c);
+                    MainWind.lock().on_key(c, mods);
                     display(MainWind.lock().buffer());
                 });
             }

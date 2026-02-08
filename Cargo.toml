@@ -12,7 +12,7 @@ kudos = { git = "https://github.com/kudos-team/kernel.git", branch = "main" }
 bootloader = { version = "0.9", features = ["map_physical_memory"]}
 x86_64 = "0.14.2"
 spin = "0.5.2"
-pc-keyboard = "0.7.0"
+pc-keyboard = "0.8.0"
 
 [dependencies.lazy_static]
 version = "1.0"

@@ -2,6 +2,7 @@ use crate::winapi::buffer::{
     Writer, WINDOW_WIDTH,
     ColorCode, Color, DEFAULT_BG,
 };
+use crate::winapi::kbd::KeyMods;
 use crate::println_at;
 
 extern crate alloc;
@@ -11,7 +12,7 @@ use alloc::vec::Vec;
 #[allow(dead_code)]
 pub trait Element {
     fn unload(&mut self) {}
-    fn on_key(&mut self, _focus: bool, _c: char) {}
+    fn on_key(&mut self, _focus: bool, _c: char, _mods: KeyMods) {}
     fn tick(&mut self, _focus: bool) {}
     fn redraw(&self, _focus: bool, _writr: &mut spin::MutexGuard<'_, Writer>) {}
 }
@@ -50,7 +51,7 @@ impl Label {
 impl Element for Label {
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
         if focus {
-            w.set_colour(ColorCode::new(Color::Yellow, DEFAULT_BG));
+            w.set_col(ColorCode::new(Color::Yellow, DEFAULT_BG));
         }
         let bytes = self.text.as_bytes();
         for i in (0..bytes.len()).step_by(WINDOW_WIDTH) {
@@ -102,7 +103,7 @@ impl Element for Input {
     fn tick(&mut self, _focus: bool) {
         self.cursor = (self.cursor + 1) % 10;
     }
-    fn on_key(&mut self, focus: bool, c: char) {
+    fn on_key(&mut self, focus: bool, c: char, _mods: KeyMods) {
         if !focus { return; };
         //self.text += &((c as u8).to_string() + " "); // For finding char codes
         if c == 8 as char {
@@ -112,9 +113,15 @@ impl Element for Input {
         }
     }
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
-        if focus {
-            w.set_colour(ColorCode::new(Color::Yellow, DEFAULT_BG));
-        }
+        let col = if focus {
+            ColorCode::new(Color::Yellow, DEFAULT_BG)
+        } else {
+            if self.boxed {
+                ColorCode::new(Color::LightBlue, DEFAULT_BG)
+            } else {
+                ColorCode::default()
+            }
+        };
         let txt = if focus {
             if self.cursor >= 5 {
                 self.text.clone() + "_"
@@ -126,6 +133,7 @@ impl Element for Input {
         let boxwid = lines.iter().map(|l| l.len()).max().unwrap_or(0); 
         let boxspaces = spacing(self.align, boxwid + 2, WINDOW_WIDTH);
         if self.boxed {
+            w.set_col(col);
             w.write_string(&" ".repeat(boxspaces));
             w.write_byte(0xDA);
             for _col in 0..boxwid {
@@ -134,23 +142,35 @@ impl Element for Input {
             w.write_byte(0xBF);
             w.write_byte(b'\n');
         }
-        for line in &lines {
-            if self.boxed {
+        if self.boxed {
+            let txtcol = if focus {
+                ColorCode::new(Color::Pink, DEFAULT_BG)
+            } else {
+                ColorCode::default()
+            };
+            for line in &lines {
                 let lineln = line.len();
                 let left_box_align = spacing(self.align, lineln, boxwid);
                 w.write_string(&" ".repeat(boxspaces));
+                w.set_col(col);
                 w.write_byte(0xB3);
+                w.set_col(txtcol);
                 w.write_string(&" ".repeat(left_box_align));
                 w.write_string(line);
                 w.write_string(&" ".repeat(boxwid - lineln - left_box_align));
+                w.set_col(col);
                 w.write_byte(0xB3);
                 w.write_byte(b'\n');
-            } else {
+            }
+        } else {
+            for line in &lines {
+                w.set_col(col);
                 let spaces = spacing(self.align, line.len(), WINDOW_WIDTH);
                 println_at!(w, "{}{}", " ".repeat(spaces), line);
             }
         }
         if self.boxed {
+            w.set_col(col);
             w.write_string(&" ".repeat(boxspaces));
             w.write_byte(0xC0);
             for _col in 0..boxwid {

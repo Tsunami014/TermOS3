@@ -10,7 +10,7 @@ dependencies = [
  "futures-util",
  "kudos",
  "lazy_static",
- "pc-keyboard",
+ "pc-keyboard 0.8.0",
  "spin 0.5.2",
  "x86_64",
 ]
@@ -103,7 +103,7 @@ dependencies = [
  "crossbeam-queue",
  "futures-util",
  "lazy_static",
- "pc-keyboard",
+ "pc-keyboard 0.7.0",
  "pic8259",
  "spin 0.5.2",
  "uart_16550",
@@ -125,6 +125,12 @@ name = "pc-keyboard"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed089a1fbffe3337a1a345501c981f1eb1e47e69de5a40e852433e12953c3174"
+
+[[package]]
+name = "pc-keyboard"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0ca629cbb3f0d5b699c338f0129ff78c9bfd7ea8b1258ad529bff490dc8ed5a"
 
 [[package]]
 name = "pic8259"

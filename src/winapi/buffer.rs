@@ -101,10 +101,10 @@ impl Writer {
         }
     }
 
-    pub fn colour(&self) -> ColorCode {
+    pub fn col(&self) -> ColorCode {
         self.locked_buf().colour
     }
-    pub fn set_colour(&mut self, new_col: ColorCode) {
+    pub fn set_col(&mut self, new_col: ColorCode) {
         self.locked_buf().colour = new_col;
     }
 
