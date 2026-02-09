@@ -37,7 +37,7 @@ impl Window for MainW {
     fn unload(&mut self) { self.core.unload(); }
 
     fn on_key(&mut self, ev: &KeyEvent) {
-        if let Some(c) = ev.unicode {
+        if ev.souper && let Some(c) = ev.unicode {
             if c == 9 as char {
                 if ev.shift {
                     self.active -= 1;

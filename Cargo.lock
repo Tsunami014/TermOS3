@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "Template"
+name = "TermOS3"
 version = "0.0.0"
 dependencies = [
  "bootloader",
@@ -96,7 +96,7 @@ dependencies = [
 [[package]]
 name = "kudos"
 version = "0.0.0"
-source = "git+https://github.com/kudos-team/kernel.git?branch=main#233fc84d568752522c196ab6b6c9543ccfdbf503"
+source = "git+https://github.com/kudos-team/kernel.git?branch=main#0859f0b19b80b3dad8f4676a558330243a07e84b"
 dependencies = [
  "bootloader",
  "conquer-once",

@@ -1,8 +1,8 @@
 [package]
-name = "Template"
+name = "TermOS3"
 version = "0.0.0"
 edition = "2024"
-authors = ["Tsunami014 <tsunami014@duck.com>", "chishxd", "PixelSaver"]
+authors = ["Tsunami014 <tsunami014@duck.com>"]
 
 [features]
 bootloader = []

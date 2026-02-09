@@ -8,6 +8,8 @@ It's the third because I've started making 2 other terminal operating systems in
 cargo run --features bootloader
 ```
 
+In Qemu press ctrl+alt+G to toggle input grabbing to input special keys properly like super
+
 ## Installing
 Run these commands with `rustup` installed:
 ```bash
