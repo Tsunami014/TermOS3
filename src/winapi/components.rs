@@ -31,6 +31,24 @@ fn spacing(align: Alignment, len: usize, width: usize) -> usize {
         Alignment::Right => width - len,
     }
 }
+fn wrap_lines(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+
+    for line in text.split('\n') {
+        if line.is_empty() {
+            out.push(String::new());
+            continue;
+        }
+
+        let mut i = 0;
+        while i < line.len() {
+            let end = (i + (WINDOW_WIDTH-2)).min(line.len());
+            out.push(line[i..end].to_string());
+            i = end;
+        }
+    }
+    out
+}
 
 pub struct Label {
     pub text: String,
@@ -46,6 +64,11 @@ impl Label {
     }
     pub fn new_string(txt: String) -> Self {
         Self { text: txt, align: Alignment::Middle }
+    }
+
+    pub fn with_align(mut self, align: Alignment) -> Self {
+        self.align = align;
+        self
     }
 }
 impl Element for Label {
@@ -71,6 +94,7 @@ pub struct Input {
     pub boxed: bool,
     cursor: u8,
 }
+#[allow(dead_code)]
 impl Input {
     pub fn new() -> Self {
         Self {
@@ -80,23 +104,14 @@ impl Input {
             cursor: 0
         }
     }
-    fn wrap_lines(text: &str) -> Vec<String> {
-        let mut out = Vec::new();
 
-        for line in text.split('\n') {
-            if line.is_empty() {
-                out.push(String::new());
-                continue;
-            }
-
-            let mut i = 0;
-            while i < line.len() {
-                let end = (i + (WINDOW_WIDTH-2)).min(line.len());
-                out.push(line[i..end].to_string());
-                i = end;
-            }
-        }
-        out
+    pub fn with_align(mut self, align: Alignment) -> Self {
+        self.align = align;
+        self
+    }
+    pub fn with_boxed(mut self, boxed: bool) -> Self {
+        self.boxed = boxed;
+        self
     }
 }
 impl Element for Input {
@@ -118,20 +133,25 @@ impl Element for Input {
         let col = if focus {
             ColorCode::new(Color::Yellow, DEFAULT_BG)
         } else {
-            if self.boxed {
-                ColorCode::new(Color::LightBlue, DEFAULT_BG)
-            } else {
-                ColorCode::default()
-            }
+            ColorCode::new(Color::LightBlue, DEFAULT_BG)
         };
-        let txt = if focus {
-            if self.cursor >= 5 {
-                self.text.clone() + "_"
+        let txt =
+            if focus {
+                if self.cursor >= 5 {
+                    self.text.clone() + "_"
+                } else {
+                    self.text.clone() + " "
+                }
+            } else if self.text.len() == 0 {
+                if self.boxed {
+                    " ".to_string()
+                } else {
+                    "___".to_string()
+                }
             } else {
-                self.text.clone() + " "
-            }
-        } else { self.text.clone() };
-        let lines = Input::wrap_lines(&txt);
+                self.text.clone()
+            };
+        let lines = wrap_lines(&txt);
         let boxwid = lines.iter().map(|l| l.len()).max().unwrap_or(0); 
         let boxspaces = spacing(self.align, boxwid + 2, WINDOW_WIDTH);
         if self.boxed {

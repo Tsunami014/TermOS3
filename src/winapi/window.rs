@@ -86,7 +86,11 @@ impl Window for ElementWindow {
         if ev.souper && let Some(c) = ev.unicode {
             if c == 9 as char {
                 if ev.shift {
-                    self.active -= 1;
+                    if self.active == 0 {
+                        self.active = self.elms.len()-1;
+                    } else {
+                        self.active -= 1;
+                    }
                 } else {
                     self.active += 1;
                 }
