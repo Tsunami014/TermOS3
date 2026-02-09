@@ -24,7 +24,7 @@ fn tick() {
 
 async fn main() {
     if let Some(w) = WINDOWS.get(0) {
-        opens::add_window(w());
+        opens::enter_window(w());
     }
 
     use kudos::{connect, interrupts::TimerIntSig};

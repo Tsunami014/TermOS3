@@ -13,6 +13,8 @@ use alloc::{
 use core::option::Option;
 use spin::Mutex;
 
+use crate::opens;
+
 #[allow(dead_code)]
 pub trait Window: Send + Sync {
     fn buffer(&mut self) -> &Arc<Mutex<Buffer>>;
@@ -77,6 +79,11 @@ impl ElementWindow {
         this.redraw();
         this
     }
+
+    pub fn with_active(mut self, active: usize) -> Self {
+        self.active = active;
+        self
+    }
 }
 impl Window for ElementWindow {
     fn buffer(&mut self) -> &Arc<Mutex<Buffer>> { self.core.buffer() }
@@ -96,6 +103,9 @@ impl Window for ElementWindow {
                 }
                 self.active = self.active % self.elms.len();
                 self.redraw();
+                return;
+            } else if c == 'q' {
+                opens::exit_window();
                 return;
             }
         }

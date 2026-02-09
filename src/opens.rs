@@ -1,4 +1,5 @@
 use crate::winapi::window::Window;
+use crate::windows::APPLAUNCHER;
 
 extern crate alloc;
 use alloc::{
@@ -13,18 +14,22 @@ lazy_static! {
         Mutex::new(Vec::new());
 }
 static OPEN_WINDOW_IDX: Mutex<usize> = Mutex::new(usize::MAX);
+lazy_static! {
+    pub static ref LAUNCHER: Arc<Mutex<dyn Window>> =
+        APPLAUNCHER();
+}
 
 pub fn get_open() -> Option<Arc<Mutex<dyn Window>>> {
     let idx = *OPEN_WINDOW_IDX.lock();
     if idx == usize::MAX {
-        return None;
+        return Some(LAUNCHER.clone());
     }
 
     let windows = OPEN_WINDOWS.lock();
     windows.get(idx).cloned()
 }
 
-pub fn add_window(win: Arc<Mutex<dyn Window>>) {
+pub fn enter_window(win: Arc<Mutex<dyn Window>>) {
     let mut windows = OPEN_WINDOWS.lock();
     windows.push(win);
 
@@ -32,7 +37,7 @@ pub fn add_window(win: Arc<Mutex<dyn Window>>) {
     *idx = windows.len() - 1;
 }
 
-pub fn remove_current_window() {
+pub fn exit_window() {
     let mut idx = OPEN_WINDOW_IDX.lock();
     if *idx == usize::MAX {
         return;
@@ -43,9 +48,5 @@ pub fn remove_current_window() {
     if *idx < windows.len() {
         windows.remove(*idx);
     }
-    if windows.is_empty() {
-        *idx = usize::MAX;
-    } else if *idx >= windows.len() {
-        *idx = windows.len() - 1;
-    }
+    *idx = usize::MAX;
 }
