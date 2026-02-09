@@ -8,7 +8,7 @@ extern crate alloc;
 use alloc::sync::Arc;
 use spin::Mutex;
 
-pub fn display(buf: &Arc<Mutex<Buffer>>) {
+fn display_screen_base() {
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();
         const HORIZ_PIPE: u8 = 0xC4;
@@ -34,6 +34,10 @@ pub fn display(buf: &Arc<Mutex<Buffer>>) {
         writer.set_char_at(BUFFER_HEIGHT-1, BUFFER_WIDTH-1, 0xD9); // Bottom right
         writer.set_char_at(BUFFER_HEIGHT-1, 0, 0xC0); // Bottom left
     });
+}
+
+pub fn display(buf: &Arc<Mutex<Buffer>>) {
+    display_screen_base();
 
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();
@@ -42,6 +46,19 @@ pub fn display(buf: &Arc<Mutex<Buffer>>) {
             for col in 0..BUFFER_WIDTH-2 {
                 writer.color_code = mbuf.get_col(col, row);
                 writer.set_char_at(row+1, col+1, mbuf.get(col, row));
+            }
+        }
+    });
+}
+
+pub fn clear_display() {
+    display_screen_base();
+
+    interrupts::without_interrupts(|| {
+        let mut writer = WRITER.lock();
+        for row in 1..BUFFER_HEIGHT-1 {
+            for col in 1..BUFFER_WIDTH-1 {
+                writer.set_char_at(row, col, b' ');
             }
         }
     });

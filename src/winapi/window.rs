@@ -1,10 +1,17 @@
-use crate::winapi::buffer::{Buffer, Writer};
+use crate::winapi::{
+    buffer::{Buffer, Writer},
+    components,
+};
 use kudos::keyboard::KeyEvent;
 
 extern crate alloc;
+use alloc::{
+    vec::Vec,
+    boxed::Box,
+    sync::Arc,
+};
 use core::option::Option;
 use spin::Mutex;
-use alloc::sync::Arc;
 
 #[allow(dead_code)]
 pub trait Window: Send + Sync {
@@ -50,5 +57,61 @@ impl WindowCore {
             self.load();
         }
         self.writr.as_ref().unwrap()
+    }
+}
+
+
+type ElementList = Vec<Box<dyn components::Element + Send + Sync>>;
+pub struct ElementWindow {
+    core: WindowCore,
+    elms: ElementList,
+    active: usize,
+}
+impl ElementWindow {
+    pub fn new(elms: ElementList) -> Self {
+        let mut this = Self {
+            core: WindowCore::new(),
+            elms: elms,
+            active: 0,
+        };
+        this.redraw();
+        this
+    }
+}
+impl Window for ElementWindow {
+    fn buffer(&mut self) -> &Arc<Mutex<Buffer>> { self.core.buffer() }
+    fn unload(&mut self) { self.core.unload(); }
+
+    fn on_key(&mut self, ev: &KeyEvent) {
+        if ev.souper && let Some(c) = ev.unicode {
+            if c == 9 as char {
+                if ev.shift {
+                    self.active -= 1;
+                } else {
+                    self.active += 1;
+                }
+                self.active = self.active % self.elms.len();
+                self.redraw();
+                return;
+            }
+        }
+        for (idx, elm) in self.elms.iter_mut().enumerate() {
+            elm.on_key(idx == self.active, ev);
+        }
+        self.redraw();
+    }
+    fn tick(&mut self) {
+        for (idx, elm) in self.elms.iter_mut().enumerate() {
+            elm.tick(idx == self.active);
+        }
+        self.redraw();
+    }
+    fn redraw(&mut self) {
+        let mut writr = self.core.writer().lock();
+        writr.clear();
+        for (idx, elm) in self.elms.iter().enumerate() {
+            writr.clear_col();
+            elm.redraw(idx == self.active, &mut writr);
+        }
     }
 }

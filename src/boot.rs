@@ -4,38 +4,44 @@ use futures_util::stream::StreamExt;
 use x86_64::instructions::interrupts;
 
 use crate::{
-    display::display,
-    winapi::window::Window,
-    windows,
+    display::{display, clear_display},
+    windows::WINDOWS,
+    opens,
 };
 
-extern crate alloc;
-use alloc::sync::Arc;
-use spin::Mutex;
-use lazy_static::lazy_static;
-lazy_static! {
-    pub static ref MainWind: Arc<Mutex<dyn Window>> =
-        Arc::new(Mutex::new(windows::test::MainW::new()));
+
+fn tick() {
+    interrupts::without_interrupts(|| {
+        if let Some(w) = opens::get_open() {
+            let mut win = w.lock();
+            win.tick();
+            display(win.buffer());
+        } else {
+            clear_display();
+        }
+    });
 }
 
 async fn main() {
-    use kudos::{connect, interrupts::TimerIntSig};
-    connect!(TimerIntSig, async |_| {
-        interrupts::without_interrupts(|| {
-            MainWind.lock().tick();
-            display(MainWind.lock().buffer());
-        });
-    });
+    if let Some(w) = WINDOWS.get(0) {
+        opens::add_window(w());
+    }
 
-    interrupts::without_interrupts(|| {
-        MainWind.lock().redraw();
-        display(MainWind.lock().buffer());
-    });
+    use kudos::{connect, interrupts::TimerIntSig};
+    extern crate alloc;
+    connect!(TimerIntSig, async |_| { tick(); });
+    tick();
+
     let mut kstream = KeyboardStream::new();
     while let Some(ev) = kstream.next().await {
         interrupts::without_interrupts(|| {
-            MainWind.lock().on_key(&ev);
-            display(MainWind.lock().buffer());
+            if let Some(w) = opens::get_open() {
+                let mut win = w.lock();
+                win.on_key(&ev);
+                display(win.buffer());
+            } else {
+                clear_display();
+            }
         });
     }
 }
