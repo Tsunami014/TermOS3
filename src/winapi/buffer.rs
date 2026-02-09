@@ -1,6 +1,7 @@
 use kudos::vga_buffer::{
     BUFFER_WIDTH, BUFFER_HEIGHT,
 };
+#[allow(unused_imports)]
 pub use kudos::vga_buffer::{
     Color, ColorCode, DEFAULT_FG, DEFAULT_BG,
 };

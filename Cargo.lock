@@ -10,7 +10,7 @@ dependencies = [
  "futures-util",
  "kudos",
  "lazy_static",
- "pc-keyboard 0.8.0",
+ "pc-keyboard",
  "spin 0.5.2",
  "x86_64",
 ]
@@ -96,14 +96,14 @@ dependencies = [
 [[package]]
 name = "kudos"
 version = "0.0.0"
-source = "git+https://github.com/kudos-team/kernel.git?branch=main#e7dc63dc4c0f51790095365c9227f8f6e96e2cd2"
+source = "git+https://github.com/kudos-team/kernel.git?branch=main#233fc84d568752522c196ab6b6c9543ccfdbf503"
 dependencies = [
  "bootloader",
  "conquer-once",
  "crossbeam-queue",
  "futures-util",
  "lazy_static",
- "pc-keyboard 0.7.0",
+ "pc-keyboard",
  "pic8259",
  "spin 0.5.2",
  "uart_16550",
@@ -119,12 +119,6 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
  "spin 0.9.8",
 ]
-
-[[package]]
-name = "pc-keyboard"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed089a1fbffe3337a1a345501c981f1eb1e47e69de5a40e852433e12953c3174"
 
 [[package]]
 name = "pc-keyboard"

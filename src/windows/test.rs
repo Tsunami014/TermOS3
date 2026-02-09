@@ -1,7 +1,7 @@
+use kudos::keyboard::KeyEvent;
 use crate::winapi::{
     window::{Window, WindowCore},
     buffer::Buffer,
-    kbd::KeyMods,
     components,
 };
 
@@ -36,18 +36,21 @@ impl Window for MainW {
     fn buffer(&mut self) -> &Arc<Mutex<Buffer>> { self.core.buffer() }
     fn unload(&mut self) { self.core.unload(); }
 
-    fn on_key(&mut self, c: char, mods: KeyMods) {
-        if c == 9 as char {
-            if mods.shift {
-                self.active -= 1;
-            } else {
-                self.active += 1;
+    fn on_key(&mut self, ev: &KeyEvent) {
+        if let Some(c) = ev.unicode {
+            if c == 9 as char {
+                if ev.shift {
+                    self.active -= 1;
+                } else {
+                    self.active += 1;
+                }
+                self.active = self.active % self.elms.len();
+                self.redraw();
+                return;
             }
-            self.active = self.active % self.elms.len();
-        } else {
-            for (idx, elm) in self.elms.iter_mut().enumerate() {
-                elm.on_key(idx == self.active, c, mods);
-            }
+        }
+        for (idx, elm) in self.elms.iter_mut().enumerate() {
+            elm.on_key(idx == self.active, ev);
         }
         self.redraw();
     }

@@ -1,8 +1,8 @@
+use kudos::keyboard::KeyEvent;
 use crate::winapi::buffer::{
     Writer, WINDOW_WIDTH,
     ColorCode, Color, DEFAULT_BG,
 };
-use crate::winapi::kbd::KeyMods;
 use crate::println_at;
 
 extern crate alloc;
@@ -12,7 +12,7 @@ use alloc::vec::Vec;
 #[allow(dead_code)]
 pub trait Element {
     fn unload(&mut self) {}
-    fn on_key(&mut self, _focus: bool, _c: char, _mods: KeyMods) {}
+    fn on_key(&mut self, _focus: bool, _ev: &KeyEvent) {}
     fn tick(&mut self, _focus: bool) {}
     fn redraw(&self, _focus: bool, _writr: &mut spin::MutexGuard<'_, Writer>) {}
 }
@@ -103,13 +103,15 @@ impl Element for Input {
     fn tick(&mut self, _focus: bool) {
         self.cursor = (self.cursor + 1) % 10;
     }
-    fn on_key(&mut self, focus: bool, c: char, _mods: KeyMods) {
+    fn on_key(&mut self, focus: bool, ev: &KeyEvent) {
         if !focus { return; };
-        //self.text += &((c as u8).to_string() + " "); // For finding char codes
-        if c == 8 as char {
-            self.text.pop();
-        } else {
-            self.text += &c.to_string()
+        if let Some(c) = ev.unicode {
+            //self.text += &((c as u8).to_string() + " "); // For finding char codes
+            if c == 8 as char {
+                self.text.pop();
+            } else {
+                self.text += &c.to_string()
+            }
         }
     }
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {

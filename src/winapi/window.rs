@@ -1,5 +1,5 @@
 use crate::winapi::buffer::{Buffer, Writer};
-use crate::winapi::kbd::KeyMods;
+use kudos::keyboard::KeyEvent;
 
 extern crate alloc;
 use core::option::Option;
@@ -11,7 +11,7 @@ pub trait Window: Send + Sync {
     fn buffer(&mut self) -> &Arc<Mutex<Buffer>>;
     fn unload(&mut self);
 
-    fn on_key(&mut self, _c: char, _mods: KeyMods) {}
+    fn on_key(&mut self, _ev: &KeyEvent) {}
     fn tick(&mut self) {}
     fn redraw(&mut self) {}
 }
