@@ -17,5 +17,6 @@ pub fn window() -> Arc<Mutex<dyn Window>> {
         Box::new(components::Input::new()),
         Box::new(components::Label::new_str("Another input, but not a box!")),
         Box::new(components::Input::new().with_boxed(false)),
+        Box::new(components::Label::new_str("\nA multiline label...\nCan't touch this!").with_invis(true)),
     ])))
 }

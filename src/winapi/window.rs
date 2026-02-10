@@ -84,6 +84,26 @@ impl ElementWindow {
         self.active = active;
         self
     }
+
+    fn upd_active(&mut self, dir: i8) {
+        let orig = self.active;
+
+        loop {
+            if dir == 1 {
+                self.active = (self.active + 1) % self.elms.len();
+            } else {
+                if self.active == 0 {
+                    self.active = self.elms.len() - 1;
+                } else {
+                    self.active -= 1;
+                }
+            }
+            if self.active == orig ||
+                    !self.elms.get(self.active).expect("If this fails something very bad happened").invisible() {
+                break;
+            }
+        }
+    }
 }
 impl Window for ElementWindow {
     fn buffer(&mut self) -> &Arc<Mutex<Buffer>> { self.core.buffer() }
@@ -92,16 +112,8 @@ impl Window for ElementWindow {
     fn on_key(&mut self, ev: &KeyEvent) {
         if ev.souper && let Some(c) = ev.unicode {
             if c == 9 as char {
-                if ev.shift {
-                    if self.active == 0 {
-                        self.active = self.elms.len()-1;
-                    } else {
-                        self.active -= 1;
-                    }
-                } else {
-                    self.active += 1;
-                }
-                self.active = self.active % self.elms.len();
+                let dir: i8 = if ev.shift { -1 } else { 1 };
+                self.upd_active(dir);
                 self.redraw();
                 return;
             } else if c == 'q' {

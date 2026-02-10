@@ -15,6 +15,7 @@ pub trait Element {
     fn on_key(&mut self, _focus: bool, _ev: &KeyEvent) {}
     fn tick(&mut self, _focus: bool) {}
     fn redraw(&self, _focus: bool, _writr: &mut spin::MutexGuard<'_, Writer>) {}
+    fn invisible(&self) -> bool { return false; }
 }
 
 #[allow(dead_code)]
@@ -52,37 +53,39 @@ fn wrap_lines(text: &str) -> Vec<String> {
 
 pub struct Label {
     pub text: String,
-    pub align: Alignment
+    pub align: Alignment,
+    pub invis: bool,
 }
 #[allow(dead_code)]
 impl Label {
     pub fn new() -> Self {
-        Self { text: "".to_string(), align: Alignment::Middle }
+        Self { text: "".to_string(), align: Alignment::Middle, invis: false }
     }
     pub fn new_str(txt: &str) -> Self {
-        Self { text: txt.to_string(), align: Alignment::Middle }
+        Self { text: txt.to_string(), align: Alignment::Middle, invis: false }
     }
     pub fn new_string(txt: String) -> Self {
-        Self { text: txt, align: Alignment::Middle }
+        Self { text: txt, align: Alignment::Middle, invis: false }
     }
 
     pub fn with_align(mut self, align: Alignment) -> Self {
-        self.align = align;
-        self
+        self.align = align; self
+    }
+    pub fn with_invis(mut self, invis: bool) -> Self {
+        self.invis = invis; self
     }
 }
 impl Element for Label {
+    fn invisible(&self) -> bool { self.invis }
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
-        if focus {
+        if self.invis {
+            w.set_col(ColorCode::new(Color::LightGray, DEFAULT_BG));
+        } else if focus {
             w.set_col(ColorCode::new(Color::Yellow, DEFAULT_BG));
         }
-        let bytes = self.text.as_bytes();
-        for i in (0..bytes.len()).step_by(WINDOW_WIDTH) {
-            let end = (i + WINDOW_WIDTH).min(bytes.len());
-            let part = &self.text[i..end];
-
-            let spaces = spacing(self.align, end - i, WINDOW_WIDTH);
-            println_at!(w, "{}{}", " ".repeat(spaces), part)
+        for line in &wrap_lines(&self.text) {
+            let spaces = spacing(self.align, line.len(), WINDOW_WIDTH);
+            println_at!(w, "{}{}", " ".repeat(spaces), line);
         }
     }
 }
@@ -93,6 +96,7 @@ pub struct Input {
     pub align: Alignment,
     pub boxed: bool,
     cursor: u8,
+    pub invis: bool,
 }
 #[allow(dead_code)]
 impl Input {
@@ -101,20 +105,23 @@ impl Input {
             text: "".to_string(),
             align: Alignment::Middle,
             boxed: true,
-            cursor: 0
+            cursor: 0,
+            invis: false,
         }
     }
 
     pub fn with_align(mut self, align: Alignment) -> Self {
-        self.align = align;
-        self
+        self.align = align; self
     }
     pub fn with_boxed(mut self, boxed: bool) -> Self {
-        self.boxed = boxed;
-        self
+        self.boxed = boxed; self
+    }
+    pub fn with_invis(mut self, invis: bool) -> Self {
+        self.invis = invis; self
     }
 }
 impl Element for Input {
+    fn invisible(&self) -> bool { self.invis }
     fn tick(&mut self, _focus: bool) {
         self.cursor = (self.cursor + 1) % 10;
     }
@@ -130,11 +137,14 @@ impl Element for Input {
         }
     }
     fn redraw(&self, focus: bool, w: &mut spin::MutexGuard<'_, Writer>) {
-        let col = if focus {
-            ColorCode::new(Color::Yellow, DEFAULT_BG)
-        } else {
-            ColorCode::new(Color::LightBlue, DEFAULT_BG)
-        };
+        let col =
+            if self.invis {
+                ColorCode::new(Color::LightGray, DEFAULT_BG)
+            } else if focus {
+                ColorCode::new(Color::Yellow, DEFAULT_BG)
+            } else {
+                ColorCode::new(Color::LightBlue, DEFAULT_BG)
+            };
         let txt =
             if focus {
                 if self.cursor >= 5 {
