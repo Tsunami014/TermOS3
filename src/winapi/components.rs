@@ -97,6 +97,8 @@ pub struct Input {
     pub boxed: bool,
     cursor: u8,
     pub invis: bool,
+
+    pub keyhandler: Option<fn(&KeyEvent) -> bool>,
 }
 #[allow(dead_code)]
 impl Input {
@@ -107,6 +109,8 @@ impl Input {
             boxed: true,
             cursor: 0,
             invis: false,
+
+            keyhandler: None,
         }
     }
 
@@ -119,6 +123,12 @@ impl Input {
     pub fn with_invis(mut self, invis: bool) -> Self {
         self.invis = invis; self
     }
+    pub fn with_keyhandler(mut self, kh: fn(&KeyEvent) -> bool) -> Self {
+        self.keyhandler = Some(kh); self
+    }
+    pub fn without_keyhandler(mut self) -> Self {
+        self.keyhandler = None; self
+    }
 }
 impl Element for Input {
     fn invisible(&self) -> bool { self.invis }
@@ -127,6 +137,10 @@ impl Element for Input {
     }
     fn on_key(&mut self, focus: bool, ev: &KeyEvent) {
         if !focus { return; };
+        if match self.keyhandler {
+            Some(handlr) => handlr(ev),
+            None => false,
+        } { return; }
         if let Some(c) = ev.unicode {
             //self.text += &((c as u8).to_string() + " "); // For finding char codes
             if c == 8 as char {
@@ -173,8 +187,7 @@ impl Element for Input {
             }
             w.write_byte(0xBF);
             w.write_byte(b'\n');
-        }
-        if self.boxed {
+
             let txtcol = if focus {
                 ColorCode::new(Color::Pink, DEFAULT_BG)
             } else {
