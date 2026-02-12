@@ -24,6 +24,21 @@ pub trait Window: Send + Sync {
     fn tick(&mut self) {}
     fn redraw(&mut self) {}
 }
+#[macro_export]
+macro_rules! delegate {
+    (
+        $field:ident;
+        $(
+            fn $name:ident ( &mut self $(, $arg:ident : $ty:ty )* ) $(-> $ret:ty)?;
+        )*
+    ) => {
+        $(
+            fn $name(&mut self, $( $arg: $ty ),* ) $(-> $ret)? {
+                self.$field.$name($( $arg ),*)
+            }
+        )*
+    };
+}
 
 pub struct WindowCore {
     pub buf: Option<Arc<Mutex<Buffer>>>,
